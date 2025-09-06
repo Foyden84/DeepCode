@@ -14,6 +14,14 @@ from .components import (
     results_display_component,
     footer_component,
 )
+
+# Import ICRA components if available
+try:
+    from icra.frontend.components.dashboard import render_icra_dashboard
+    ICRA_AVAILABLE = True
+except ImportError:
+    ICRA_AVAILABLE = False
+
 from .handlers import (
     initialize_session_state,
     handle_start_processing_button,
@@ -39,6 +47,19 @@ def apply_custom_styles():
 
 def render_main_content():
     """Render main content area"""
+    # Check if ICRA should be displayed
+    if getattr(st.session_state, 'show_icra', False):
+        if ICRA_AVAILABLE:
+            render_icra_dashboard()
+            # Add back button
+            if st.button("← Back to DeepCode Main"):
+                st.session_state.show_icra = False
+                st.rerun()
+            return
+        else:
+            st.error("ICRA components not available")
+            st.session_state.show_icra = False
+
     # Display header and features
     display_header()
     display_features()

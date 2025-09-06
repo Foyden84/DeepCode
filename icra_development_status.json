@@ -1,0 +1,54 @@
+{
+  "start_time": "2025-09-06T21:20:39.848235",
+  "agents": {
+    "frontend": {
+      "name": "Frontend Dashboard Agent",
+      "branch": "feature/icra-frontend-dashboard",
+      "status": "ready",
+      "deliverables": [
+        "Streamlit dashboard extension",
+        "Code diff viewer component",
+        "Real-time collaboration interface",
+        "Review status tracking UI"
+      ],
+      "progress": 0
+    },
+    "backend": {
+      "name": "Backend API Agent",
+      "branch": "feature/icra-backend-api",
+      "status": "ready",
+      "deliverables": [
+        "FastAPI application structure",
+        "Review orchestration engine",
+        "Database models and migrations",
+        "Git integration endpoints"
+      ],
+      "progress": 0
+    },
+    "security": {
+      "name": "Security Rules Agent",
+      "branch": "feature/icra-security-rules",
+      "status": "ready",
+      "deliverables": [
+        "Enhanced security_agent.py",
+        "Vulnerability detection rules",
+        "Security policy engine",
+        "Risk scoring algorithms"
+      ],
+      "progress": 0
+    },
+    "testing": {
+      "name": "Testing & Documentation Agent",
+      "branch": "feature/icra-testing-docs",
+      "status": "ready",
+      "deliverables": [
+        "Comprehensive test suites",
+        "API documentation",
+        "Integration tests",
+        "User guides and technical docs"
+      ],
+      "progress": 0
+    }
+  },
+  "overall_status": "in_progress"
+}

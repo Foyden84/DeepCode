@@ -538,6 +538,16 @@ def sidebar_control_panel() -> Dict[str, Any]:
         else:
             st.info("⚪ Engine Ready")
 
+        # ICRA Navigation
+        st.markdown("### 🔍 Code Review")
+        try:
+            from icra.frontend.components.dashboard import render_icra_dashboard
+            if st.button("🚀 Launch ICRA Dashboard", use_container_width=True):
+                st.session_state.show_icra = True
+                st.rerun()
+        except ImportError:
+            st.info("ICRA not available in this environment")
+
         # Workflow configuration options
         st.markdown("### ⚙️ Workflow Settings")
 
