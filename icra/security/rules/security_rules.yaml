@@ -1,0 +1,221 @@
+# ICRA Security Rules Configuration
+# Defines security policies and rules for code review analysis
+
+policies:
+  - id: "no_hardcoded_secrets"
+    name: "No Hardcoded Secrets"
+    description: "Prevent hardcoded passwords, API keys, and other secrets in code"
+    severity: "critical"
+    enabled: true
+    rules:
+      - type: "pattern_match"
+        patterns:
+          - 'password\s*=\s*["\'][^"\']{8,}["\']'
+          - 'api_key\s*=\s*["\'][A-Za-z0-9]{20,}["\']'
+          - 'secret\s*=\s*["\'][^"\']{10,}["\']'
+          - 'token\s*=\s*["\'][A-Za-z0-9]{20,}["\']'
+          - 'private_key\s*=\s*["\'][^"\']{20,}["\']'
+    metadata:
+      file_types: [".py", ".js", ".java", ".php", ".rb", ".go", ".cs"]
+      excluded_paths: ["test/", "tests/", "spec/", "mock/", "fixture/"]
+
+  - id: "sql_injection_prevention"
+    name: "SQL Injection Prevention"
+    description: "Prevent SQL injection vulnerabilities through string concatenation"
+    severity: "high"
+    enabled: true
+    rules:
+      - type: "pattern_match"
+        patterns:
+          - 'execute\s*\(\s*["\'].*\+.*["\']\s*\)'
+          - 'query\s*\(\s*["\'].*\+.*["\']\s*\)'
+          - 'sql\s*=\s*["\'].*\+.*["\']'
+          - 'SELECT\s+.*\+.*FROM'
+          - 'INSERT\s+.*\+.*VALUES'
+          - 'UPDATE\s+.*\+.*SET'
+          - 'DELETE\s+.*\+.*WHERE'
+    metadata:
+      file_types: [".py", ".java", ".php", ".rb", ".cs"]
+
+  - id: "xss_prevention"
+    name: "XSS Prevention"
+    description: "Prevent Cross-Site Scripting vulnerabilities"
+    severity: "high"
+    enabled: true
+    rules:
+      - type: "pattern_match"
+        patterns:
+          - 'innerHTML\s*=\s*.*\+'
+          - 'document\.write\s*\(\s*.*\+'
+          - 'eval\s*\(\s*.*\+'
+          - 'setTimeout\s*\(\s*["\'].*\+.*["\']'
+          - 'setInterval\s*\(\s*["\'].*\+.*["\']'
+    metadata:
+      file_types: [".js", ".html", ".php", ".py"]
+
+  - id: "insecure_crypto"
+    name: "Insecure Cryptography"
+    description: "Prevent use of insecure cryptographic functions"
+    severity: "medium"
+    enabled: true
+    rules:
+      - type: "function_call"
+        functions: ["md5", "sha1", "des", "rc4", "md4"]
+      - type: "pattern_match"
+        patterns:
+          - 'hashlib\.md5\s*\('
+          - 'hashlib\.sha1\s*\('
+          - 'Cipher\.DES\s*\('
+          - 'crypto\.createHash\s*\(\s*["\']md5["\']'
+          - 'crypto\.createHash\s*\(\s*["\']sha1["\']'
+    metadata:
+      file_types: [".py", ".js", ".java", ".php", ".rb", ".go", ".cs"]
+
+  - id: "authentication_required"
+    name: "Authentication Required"
+    description: "Ensure authentication is required for sensitive endpoints"
+    severity: "high"
+    enabled: true
+    rules:
+      - type: "authentication_required"
+        endpoint_patterns:
+          - '@app\.route\s*\(\s*["\'']/admin'
+          - '@app\.route\s*\(\s*["\'']/api/user'
+          - '@app\.route\s*\(\s*["\'']/dashboard'
+          - '@app\.route\s*\(\s*["\'']/profile'
+          - '@RequestMapping\s*\(\s*["\'']/admin'
+          - 'router\.get\s*\(\s*["\'']/admin'
+    metadata:
+      file_types: [".py", ".java", ".js", ".php", ".rb"]
+
+  - id: "input_validation"
+    name: "Input Validation Required"
+    description: "Ensure proper input validation for user inputs"
+    severity: "medium"
+    enabled: true
+    rules:
+      - type: "input_validation"
+        input_sources: ["request.form", "request.args", "request.json", "req.body", "req.params", "req.query"]
+    metadata:
+      file_types: [".py", ".js", ".java", ".php", ".rb"]
+
+  - id: "secure_headers"
+    name: "Secure Headers"
+    description: "Ensure security headers are properly configured"
+    severity: "medium"
+    enabled: true
+    rules:
+      - type: "secure_headers"
+        required_headers:
+          - "X-Content-Type-Options"
+          - "X-Frame-Options"
+          - "X-XSS-Protection"
+          - "Strict-Transport-Security"
+          - "Content-Security-Policy"
+    metadata:
+      file_types: [".py", ".js", ".java", ".php", ".rb"]
+
+  - id: "file_upload_security"
+    name: "File Upload Security"
+    description: "Ensure secure file upload handling"
+    severity: "high"
+    enabled: true
+    rules:
+      - type: "pattern_match"
+        patterns:
+          - 'save\s*\(\s*.*request\.files'
+          - 'upload\s*\(\s*.*\.\*'
+          - 'move_uploaded_file\s*\('
+          - 'file\.save\s*\('
+    metadata:
+      file_types: [".py", ".php", ".java", ".rb"]
+
+  - id: "command_injection"
+    name: "Command Injection Prevention"
+    description: "Prevent command injection vulnerabilities"
+    severity: "critical"
+    enabled: true
+    rules:
+      - type: "function_call"
+        functions: ["exec", "eval", "system", "shell_exec", "passthru", "popen"]
+      - type: "pattern_match"
+        patterns:
+          - 'os\.system\s*\(\s*.*\+'
+          - 'subprocess\.call\s*\(\s*.*\+'
+          - 'Runtime\.getRuntime\(\)\.exec\s*\('
+    metadata:
+      file_types: [".py", ".java", ".php", ".rb", ".js"]
+
+  - id: "path_traversal"
+    name: "Path Traversal Prevention"
+    description: "Prevent path traversal vulnerabilities"
+    severity: "high"
+    enabled: true
+    rules:
+      - type: "pattern_match"
+        patterns:
+          - '\.\./.*\.\.'
+          - 'open\s*\(\s*.*\+.*["\']'
+          - 'file_get_contents\s*\(\s*.*\+'
+          - 'readFile\s*\(\s*.*\+'
+    metadata:
+      file_types: [".py", ".php", ".java", ".rb", ".js"]
+
+  - id: "session_security"
+    name: "Session Security"
+    description: "Ensure secure session management"
+    severity: "medium"
+    enabled: true
+    rules:
+      - type: "pattern_match"
+        patterns:
+          - 'session\[.*\]\s*=\s*.*request\.'
+          - 'session\.set\s*\(\s*["\'].*["\'],\s*request\.'
+          - 'HttpSession.*setAttribute.*request\.'
+    metadata:
+      file_types: [".py", ".java", ".php", ".rb"]
+
+# Rule categories for organization
+categories:
+  injection:
+    - "sql_injection_prevention"
+    - "xss_prevention"
+    - "command_injection"
+    - "path_traversal"
+  
+  authentication:
+    - "authentication_required"
+    - "session_security"
+  
+  cryptography:
+    - "insecure_crypto"
+    - "no_hardcoded_secrets"
+  
+  input_handling:
+    - "input_validation"
+    - "file_upload_security"
+  
+  headers:
+    - "secure_headers"
+
+# Severity levels and their weights for scoring
+severity_weights:
+  critical: 25
+  high: 15
+  medium: 8
+  low: 3
+
+# Default configuration
+default_config:
+  enable_all_policies: true
+  fail_on_critical: true
+  fail_on_high: false
+  max_violations_per_file: 50
+  excluded_file_patterns:
+    - "*/test/*"
+    - "*/tests/*"
+    - "*/spec/*"
+    - "*/mock/*"
+    - "*/fixture/*"
+    - "*.test.*"
+    - "*.spec.*"
