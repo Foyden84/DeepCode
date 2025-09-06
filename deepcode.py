@@ -120,10 +120,27 @@ def cleanup_cache():
     """Clean up Python cache files"""
     try:
         print("🧹 Cleaning up cache files...")
-        # Clean up __pycache__ directories
-        os.system('find . -type d -name "__pycache__" -exec rm -r {} + 2>/dev/null')
-        # Clean up .pyc files
-        os.system('find . -name "*.pyc" -delete 2>/dev/null')
+        import platform
+        import shutil
+
+        # Clean up __pycache__ directories and .pyc files
+        for root, dirs, files in os.walk("."):
+            # Remove __pycache__ directories
+            if "__pycache__" in dirs:
+                pycache_path = os.path.join(root, "__pycache__")
+                try:
+                    shutil.rmtree(pycache_path)
+                except Exception:
+                    pass
+
+            # Remove .pyc files
+            for file in files:
+                if file.endswith(".pyc"):
+                    try:
+                        os.remove(os.path.join(root, file))
+                    except Exception:
+                        pass
+
         print("✅ Cache cleanup completed")
     except Exception as e:
         print(f"⚠️  Cache cleanup failed: {e}")

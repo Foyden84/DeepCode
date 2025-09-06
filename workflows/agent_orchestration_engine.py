@@ -57,6 +57,7 @@ from utils.llm_utils import (
     get_adaptive_prompts,
 )
 from workflows.agents.document_segmentation_agent import prepare_document_segments
+from workflows.agents.security_agent import run_security_analysis
 
 # Environment configuration
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"  # Prevent .pyc file generation
@@ -992,6 +993,63 @@ async def orchestrate_codebase_intelligence_agent(
         return error_report
 
 
+async def orchestrate_security_analysis_agent(
+    dir_info: Dict[str, str],
+    logger,
+    progress_callback: Optional[Callable] = None
+) -> Dict:
+    """
+    Orchestrate intelligent security analysis with automated vulnerability detection.
+
+    This agent autonomously analyzes generated code for security vulnerabilities
+    and provides comprehensive security recommendations.
+
+    Args:
+        dir_info: Workspace infrastructure metadata
+        logger: Logger instance for security tracking
+        progress_callback: Progress callback function for monitoring
+
+    Returns:
+        dict: Comprehensive security analysis result
+    """
+    if progress_callback:
+        progress_callback(95, "🔒 Orchestrating security analysis and vulnerability detection...")
+
+    print("Initiating intelligent security analysis with automated vulnerability detection...")
+    await asyncio.sleep(2)  # Brief pause before starting security analysis
+
+    try:
+        # Check if code directory exists
+        code_directory = os.path.join(dir_info["paper_dir"], "generate_code")
+        if not os.path.exists(code_directory):
+            print(f"Code directory not found: {code_directory}")
+            return {
+                "status": "skipped",
+                "message": "No code directory found - skipping security analysis"
+            }
+
+        # Run security analysis
+        security_result = await run_security_analysis(code_directory, logger)
+
+        # Save security analysis results
+        security_report_path = os.path.join(dir_info["paper_dir"], "security_analysis_report.txt")
+        with open(security_report_path, "w", encoding="utf-8") as f:
+            f.write(str(security_result))
+        print(f"Security analysis report saved to {security_report_path}")
+
+        if security_result["status"] == "success":
+            print("Security analysis completed successfully!")
+            print("Review the security report for vulnerability findings and recommendations")
+        else:
+            print(f"Security analysis failed: {security_result.get('message', 'Unknown error')}")
+
+        return security_result
+
+    except Exception as e:
+        print(f"Error during security analysis: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 async def synthesize_code_implementation_agent(
     dir_info: Dict[str, str],
     logger,
@@ -1335,6 +1393,19 @@ async def execute_multi_agent_research_pipeline(
         implementation_result = await synthesize_code_implementation_agent(
             dir_info, logger, progress_callback, enable_indexing
         )
+
+        # Phase 9: Security Analysis (optional but recommended)
+        security_result = None
+        if implementation_result.get("status") == "success":
+            try:
+                security_result = await orchestrate_security_analysis_agent(
+                    dir_info, logger, progress_callback
+                )
+            except Exception as e:
+                print(f"⚠️ Security analysis failed but continuing: {e}")
+                security_result = {"status": "error", "message": str(e)}
+        else:
+            print("🔶 Skipping security analysis (code implementation failed)")
 
         # Final Status Report
         if enable_indexing:
